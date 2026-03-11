@@ -2,44 +2,22 @@
 
 Next.js + SQLite dashboard for aggregating jobs from editable sources.
 
-## Why jobs could be empty before
-Some career pages are fully JS-rendered and do not expose RSS. If sync only relied on feeds/basic links, it returned no rows.
-
-## What this version does
-Sync now supports:
-- RSS ingestion (`feed_url` = normal URL)
-- JSON API ingestion (`feed_url` = `json:https://...`)
-- Website crawling when `feed_url` is empty:
-  - crawl source page + common career paths (`/careers`, `/jobs`, etc.)
-  - extract links from anchors and embedded script URLs
-  - parse `application/ld+json` JobPosting data
-  - fallback to sitemap discovery (`/sitemap.xml`, `/sitemap_index.xml`)
-
 ## Features
-- Editable sources
-- Sync diagnostics by source
-- Keyword filter
-- Created date filter
-- One-click apply links
-- SQLite storage
+- Manage job sources (career URLs + optional RSS feed URL).
+- Sync jobs from enabled RSS sources.
+- Keyword filtering on title/company/location.
+- One-click **Apply** button opens original job post.
+- SQLite for local persistence (`data.sqlite`).
 
 ## Run
 ```bash
-git clone https://github.com/shaakib99/job-posting.git
-cd job-posting
-npm config set registry https://registry.npmjs.org/
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`, click **Sync Jobs**, then search by keyword/date.
+Then open `http://localhost:3000`.
 
-## Feed URL rules
-- `https://...` => RSS parser
-- `json:https://...` => JSON parser
-- empty => crawler mode
-
-
-## Why crawling looked broken
-Many large career pages (Workday/Greenhouse/Lever and custom JS apps) do not render job links in raw HTML response.
-This project now tries ATS APIs first for known providers, then falls back to HTML/sitemap crawling.
+## Notes
+- Platforms like LinkedIn/Google/Apple often do not provide stable public RSS feeds.
+- You can still keep them as manual sources and add feed URLs when available.
+- Later migration to MySQL/PostgreSQL can be done by replacing the DB layer in `lib/db.ts`.
