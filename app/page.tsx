@@ -21,19 +21,6 @@ type Job = {
   source_name: string;
 };
 
-type SyncDetail = {
-  source: string;
-  inserted: number;
-  status: 'ok' | 'skipped' | 'error';
-  message?: string;
-};
-
-type SyncResponse = {
-  inserted: number;
-  scannedSources: number;
-  details: SyncDetail[];
-};
-
 const emptySource = { name: '', source_url: '', feed_url: '' };
 
 export default function Home() {
@@ -42,7 +29,6 @@ export default function Home() {
   const [keyword, setKeyword] = useState('');
   const [newSource, setNewSource] = useState(emptySource);
   const [loading, setLoading] = useState(false);
-  const [syncSummary, setSyncSummary] = useState<SyncResponse | null>(null);
 
   async function loadSources() {
     const res = await fetch('/api/sources');
@@ -82,9 +68,7 @@ export default function Home() {
 
   async function syncJobs() {
     setLoading(true);
-    const response = await fetch('/api/jobs/fetch', { method: 'POST' });
-    const summary = (await response.json()) as SyncResponse;
-    setSyncSummary(summary);
+    await fetch('/api/jobs/fetch', { method: 'POST' });
     await loadJobs();
     setLoading(false);
   }
@@ -93,9 +77,7 @@ export default function Home() {
     <main className="container grid" style={{ gridTemplateColumns: '360px 1fr' }}>
       <section className="card grid" style={{ alignContent: 'start' }}>
         <h2>Job Sources</h2>
-        <p style={{ marginTop: -10, opacity: 0.8 }}>
-          Enable/disable and add sources. Use `json:https://...` for JSON APIs or regular URL for RSS.
-        </p>
+        <p style={{ marginTop: -10, opacity: 0.8 }}>Enable/disable and add sources. RSS feeds sync automatically.</p>
 
         <form onSubmit={addSource} className="grid">
           <input
@@ -111,7 +93,7 @@ export default function Home() {
             onChange={(e) => setNewSource((prev) => ({ ...prev, source_url: e.target.value }))}
           />
           <input
-            placeholder="Feed URL (RSS) or json:https://api..."
+            placeholder="RSS feed URL (optional)"
             value={newSource.feed_url}
             onChange={(e) => setNewSource((prev) => ({ ...prev, feed_url: e.target.value }))}
           />
@@ -147,22 +129,6 @@ export default function Home() {
           <button onClick={() => loadJobs(keyword)}>Search</button>
           <button onClick={syncJobs}>{loading ? 'Syncing...' : 'Sync Jobs'}</button>
         </div>
-
-        {syncSummary ? (
-          <div className="card" style={{ padding: 12 }}>
-            <strong>
-              Sync result: {syncSummary.inserted} new jobs from {syncSummary.scannedSources} enabled sources
-            </strong>
-            <ul style={{ margin: '8px 0 0 20px' }}>
-              {syncSummary.details.map((detail) => (
-                <li key={detail.source}>
-                  {detail.source}: {detail.status} ({detail.inserted})
-                  {detail.message ? ` - ${detail.message}` : ''}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
 
         <table>
           <thead>
